@@ -1,40 +1,38 @@
 import pyodbc
+import os
+from dotenv import load_dotenv
 from prettytable import PrettyTable
 
-# Dados de conexão
+# Carregar variáveis de ambiente
+load_dotenv()
+
+# Montar string de conexão
 dados_conexao = {
-    'DRIVER': '{SQL Server}',
-    'SERVER': 'ROBSON-ALVES\\SQLEXPRESS',
-    'DATABASE': 'vendas',
-    'Trusted_Connection': 'yes',
+    'DRIVER': os.getenv('DB_DRIVER'),
+    'SERVER': os.getenv('DB_SERVER'),
+    'DATABASE': os.getenv('DB_DATABASE'),
+    'Trusted_Connection': os.getenv('DB_TRUSTED'),
 }
 
-# String de conexão
 string_conexao = ';'.join([f'{chave}={valor}' for chave, valor in dados_conexao.items()])
 
-# Conectar ao banco de dados
+# Conectar ao banco
 conexao = pyodbc.connect(string_conexao)
 cursor = conexao.cursor()
 
-# Consulta SQL
-query = "SELECT COUNT(Nome_Produto) as Quantidade, Marca_Produto FROM produtos GROUP BY Marca_Produto"
-
 # Executar a consulta
+query = "SELECT COUNT(Nome_Produto) as Quantidade, Marca_Produto FROM produtos GROUP BY Marca_Produto"
 cursor.execute(query)
-
-# Obter os resultados
 resultados = cursor.fetchall()
 
-# Criar uma tabela para exibir os resultados
-tabela_resultados = PrettyTable()
-tabela_resultados.field_names = [desc[0] for desc in cursor.description]
+# Tabela formatada
+tabela = PrettyTable()
+tabela.field_names = [desc[0] for desc in cursor.description]
 
-# Adicionar os dados à tabela
 for linha in resultados:
-    tabela_resultados.add_row(linha)
+    tabela.add_row(linha)
 
-# Imprimir a tabela formatada
-print(tabela_resultados)
+print(tabela)
 
-# Fechar a conexão
+cursor.close()
 conexao.close()
